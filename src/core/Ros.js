@@ -118,11 +118,11 @@ ROSLIB.Ros.prototype.connect = function(url) {
       if (message.op === 'publish') {
         that.emit(message.topic, message.msg);
       } else if (message.op === 'service_response') {
-        that.emit(message.id, message);
+        that.emit(message.id, message.values);
       }
     }
 
-    var data = JSON.parse(message.data);
+    var data = JSON.parse(message);
     if (data.op === 'png') {
       decompressPng(data, function(decompressedData) {
         handleMessage(decompressedData);
@@ -133,10 +133,18 @@ ROSLIB.Ros.prototype.connect = function(url) {
   }
 
   this.socket = new WebSocket(url);
-  this.socket.onopen = onOpen;
-  this.socket.onclose = onClose;
-  this.socket.onerror = onError;
-  this.socket.onmessage = onMessage;
+  if (typeof Meteor !== 'undefined' && Meteor.require) {
+    // The Meteor ws API is slightly different than the builtin browser WebSocket
+    this.socket.on('open', onOpen);
+    this.socket.on('close', onClose);
+    this.socket.on('error', onError);
+    this.socket.on('message', onMessage);
+  } else {
+    this.socket.onopen = onOpen;
+    this.socket.onclose = onClose;
+    this.socket.onerror = onError;
+    this.socket.onmessage = onMessage;
+  }
 };
 
 /**

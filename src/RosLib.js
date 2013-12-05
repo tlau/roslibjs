@@ -2,7 +2,16 @@
  * @author Russell Toris - rctoris@wpi.edu
  */
 
-var ROSLIB = ROSLIB || {
+/* To make this work on Node.js */
+if (typeof Npm !== 'undefined' && Npm.require) {
+  EventEmitter2 = Npm.require('events').EventEmitter;
+}
+/* To make it work in Meteor */
+if (typeof Meteor !== 'undefined' && Meteor.require) {
+  WebSocket = Meteor.require('ws');
+}
+
+ROSLIB = {
   REVISION : '7-devel'
 };
 
