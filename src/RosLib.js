@@ -12,7 +12,7 @@ if (typeof Meteor !== 'undefined' && Meteor.require) {
 }
 
 ROSLIB = {
-  REVISION : '7-devel'
+  REVISION : '7-devel-TL'
 };
 
 //URDF types
