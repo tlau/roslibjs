@@ -28,7 +28,7 @@ ROSLIB.ActionClient = function(options) {
   this.goals = {};
 
   // flag to check if a status has been received
-  var receivedStatus = false;
+  this.receivedStatus = false;
 
   // create the topics associated with actionlib
   var feedbackListener = new ROSLIB.Topic({
@@ -67,7 +67,7 @@ ROSLIB.ActionClient = function(options) {
 
   // subscribe to the status topic
   statusListener.subscribe(function(statusMessage) {
-    receivedStatus = true;
+    that.receivedStatus = true;
     statusMessage.status_list.forEach(function(status) {
       var goal = that.goals[status.goal_id.id];
       if (goal) {
@@ -98,7 +98,7 @@ ROSLIB.ActionClient = function(options) {
   // If timeout specified, emit a 'timeout' event if the action server does not respond
   if (this.timeout) {
     setTimeout(function() {
-      if (!receivedStatus) {
+      if (!that.receivedStatus) {
         that.emit('timeout');
       }
     }, this.timeout);
@@ -112,5 +112,28 @@ ROSLIB.ActionClient.prototype.__proto__ = EventEmitter2.prototype;
 ROSLIB.ActionClient.prototype.cancel = function() {
   var cancelMessage = new ROSLIB.Message();
   this.cancelTopic.publish(cancelMessage);
+};
+
+/**
+ * wait until the server is ready to accept ActionLib calls, then call the callback
+ */
+ROSLIB.ActionClient.prototype.wait_for_server = function(callback) {
+  var _this = this;
+  if (this.receivedStatus) {
+    callback();
+  } else {
+    setTimeout(function() {
+      _this.wait_for_server(callback);
+    }, 500);
+  }
+};
+
+/**
+ * Wait until the server is ready after it has been restarted, then call the callback
+ */
+ROSLIB.ActionClient.prototype.wait_for_server_after_restart = function(callback) {
+  this.receivedStatus = false;
+
+  this.wait_for_server(callback);
 };
 
